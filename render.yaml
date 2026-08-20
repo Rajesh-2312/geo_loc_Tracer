@@ -1,0 +1,16 @@
+# Render Blueprint. Connect this repo in Render (New → Blueprint) to create the
+# service. Deploys are driven by the GitHub Action (autoDeploy is off), which
+# also injects the Supabase env vars from GitHub secrets at deploy time.
+services:
+  - type: web
+    name: geolocation-tracer
+    runtime: python
+    plan: free
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 2
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.5
+      # SUPABASE_URL and SUPABASE_SERVICE_KEY are set by the deploy workflow
+      # from GitHub secrets — do not hard-code them here.

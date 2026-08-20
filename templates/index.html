@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Location Tracer — Create a share link</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <main class="card">
+    <h1>Create a location share link</h1>
+    <p class="lede">
+      Generate a link to send to someone. When they open it, their browser asks
+      permission before sharing location — nothing is shared unless they tap
+      <strong>Allow</strong>.
+    </p>
+
+    <div class="notice">
+      Only send this link to people who agree to share their location. Tracking
+      someone without their consent is illegal.
+    </div>
+
+    <form id="create-form">
+      <label for="label">Who is asking, and why?</label>
+      <input
+        id="label"
+        name="label"
+        type="text"
+        maxlength="200"
+        placeholder="e.g. Mom — checking you got home safe"
+        required
+      />
+      <p class="hint">Shown to the recipient above the permission prompt.</p>
+
+      <label for="expiry">Link expires after</label>
+      <select id="expiry" name="expiry">
+        <option value="60">1 hour</option>
+        <option value="360">6 hours</option>
+        <option value="1440" selected>24 hours</option>
+        <option value="4320">3 days</option>
+        <option value="10080">7 days</option>
+      </select>
+      <p class="hint">After this, the link stops accepting or showing location.</p>
+
+      <label for="max-members">How many people can join?</label>
+      <select id="max-members" name="max-members">
+        <option value="1">1 person</option>
+        <option value="2">2 people</option>
+        <option value="3">3 people</option>
+        <option value="4">4 people</option>
+        <option value="5" selected>5 people</option>
+        <option value="10">10 people</option>
+      </select>
+      <p class="hint">Once this many people have joined, the link is full.</p>
+
+      <button type="submit">Create link</button>
+    </form>
+
+    <section id="result" class="result hidden">
+      <h2>Your links are ready</h2>
+
+      <p class="hint" id="expiry-note"></p>
+
+      <div class="link-row">
+        <h3>Share this with the other person</h3>
+        <p class="hint">Lets their device share its location with you.</p>
+        <div class="copyable">
+          <input id="share-url" type="text" readonly />
+          <button type="button" data-copy="share-url">Copy</button>
+        </div>
+        <div class="qr-wrap">
+          <img id="qr-img" alt="QR code for the share link" />
+          <p class="hint">Scan with a phone camera to open the share link.</p>
+        </div>
+      </div>
+
+      <div class="link-row">
+        <h3>Your private dashboard <span class="badge">keep secret</span></h3>
+        <p class="hint">
+          Only you should open this — it shows the live location. Anyone with the
+          share link alone cannot see where the device is.
+        </p>
+        <div class="copyable">
+          <input id="dashboard-url" type="text" readonly />
+          <button type="button" data-copy="dashboard-url">Copy</button>
+        </div>
+        <p><a id="dashboard-link" href="#" target="_blank" rel="noopener">Open dashboard →</a></p>
+      </div>
+    </section>
+
+    <p id="error" class="error hidden"></p>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>
