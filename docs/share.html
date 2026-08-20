@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Share your location</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <main class="card">
+    <h1>Location request</h1>
+
+    <div class="requester">
+      <span class="requester-label">You are being asked to share your live location with:</span>
+      <strong class="requester-name" id="label">…</strong>
+    </div>
+
+    <p class="lede">
+      If you agree, your browser will ask for permission. Your location is only
+      shared while this page is open and you can stop any time.
+    </p>
+
+    <p class="hint" id="count"></p>
+    <div id="notice" class="notice hidden"></div>
+
+    <div id="idle" class="hidden">
+      <label for="name">Your name (shown on the map)</label>
+      <input id="name" type="text" maxlength="40" placeholder="e.g. Alex" />
+      <button id="start-btn" type="button">Share my location</button>
+      <button id="decline-btn" type="button" class="secondary">No thanks</button>
+    </div>
+
+    <div id="sharing" class="banner hidden">
+      <span class="dot"></span>
+      <div>
+        <strong>You are sharing your live location.</strong>
+        <span id="share-status">Waiting for a GPS fix…</span>
+      </div>
+      <button id="stop-btn" type="button">Stop sharing</button>
+    </div>
+
+    <p id="message" class="message hidden"></p>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/share.js"></script>
+</body>
+</html>

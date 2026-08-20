@@ -125,6 +125,47 @@ The suite in `tests/` covers session creation, owner-key authorization, the
 member join cap, per-member tracking, ping ingestion and retrieval, coordinate
 validation, the stop flow, session expiry, and QR generation.
 
+## Deploying on GitHub Pages (static build)
+
+GitHub Pages serves **static files only** — it cannot run the Flask backend. So
+the `docs/` folder contains a **serverless version** of the app: the browser
+talks to Supabase directly using the **public anon key**, and all the backend
+logic lives in Postgres functions (`supabase_functions.sql`). No Python server
+is involved.
+
+```
+docs/
+  index.html      create a link
+  share.html      ?t=<share_token>            join + share location
+  dashboard.html  ?t=<share_token>&key=<owner_key>   live map
+  js/config.js    Supabase URL + anon key + rpc() helper
+```
+
+### Security model (important)
+
+- The **anon** key is public and safe to ship in the browser. The
+  **service_role** key is never used by this build.
+- `supabase_functions.sql` **revokes** all direct table access from the anon
+  role and exposes only a few `SECURITY DEFINER` functions
+  (`create_session`, `session_info`, `join_session`, `ping`, `get_locations`).
+  Those functions check the `share_token` / `owner_key` / `member_token`
+  themselves, so the anon key can't read anyone's location without the right
+  token.
+
+### Setup
+
+1. In Supabase, run **`supabase_schema.sql`** then **`supabase_functions.sql`**
+   in the SQL Editor.
+2. Confirm `docs/js/config.js` has your project URL and **anon** key.
+3. On GitHub: **Settings → Pages → Source: Deploy from a branch → `main` /
+   `docs`**. (If you added a Jekyll workflow earlier, delete it — this build is
+   plain static files, and `docs/.nojekyll` tells Pages not to run Jekyll.)
+4. Open `https://<user>.github.io/geo_loc_Tracer/`. Pages is HTTPS, so the
+   browser geolocation prompt works.
+
+> The Flask app at the repo root is unchanged and still works for local use or
+> Render hosting; the two builds share the same Supabase tables.
+
 ## Deployment (Render + GitHub Actions)
 
 CI/CD lives in [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml):
