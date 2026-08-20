@@ -19,8 +19,8 @@
     </div>
 
     <p class="lede">
-      If you agree, your browser will ask for permission. Your location is only
-      shared while this page is open and you can stop any time.
+      Your browser will now ask for permission. Tap <strong>Allow</strong> and
+      your live location is shared — no other steps needed. You can stop any time.
     </p>
 
     <p class="hint">{{ member_count }} of {{ max_members }} people have joined this link.</p>
@@ -33,20 +33,18 @@
     <div class="notice">This link is full ({{ max_members }} people already joined). No new sharing is possible.</div>
     {% endif %}
 
-    <div id="idle" class="{{ 'hidden' if (not active or full) else '' }}">
-      <label for="name">Your name (shown on the map)</label>
-      <input id="name" type="text" maxlength="40" placeholder="e.g. Alex" />
-      <button id="start-btn" type="button">Share my location</button>
-      <button id="decline-btn" type="button" class="secondary">No thanks</button>
-    </div>
-
     <div id="sharing" class="banner hidden">
       <span class="dot"></span>
       <div>
         <strong>You are sharing your live location.</strong>
-        <span id="share-status">Waiting for a GPS fix…</span>
+        <span id="share-status">Requesting your location…</span>
       </div>
       <button id="stop-btn" type="button">Stop sharing</button>
+    </div>
+
+    <!-- Fallback only: shown if the browser needs a tap, or permission denied. -->
+    <div id="retry" class="hidden">
+      <button id="retry-btn" type="button">Allow location</button>
     </div>
 
     <p id="message" class="message hidden"></p>

@@ -1,5 +1,8 @@
-// Share page (static build): look up the session, then on an explicit tap join
-// as a member and stream location fixes via the ping RPC.
+// Share page (static build): opening the link auto-requests location, so the
+// only thing the recipient does is tap "Allow" on the browser's own prompt.
+// (That browser prompt is mandatory and cannot be skipped — it is the consent
+// step.) A fallback button appears only if the browser needs a tap to raise the
+// prompt, or if permission was denied.
 
 const shareToken = window.qs("t");
 const memberKey = `tracer_member_${shareToken}`;
@@ -9,12 +12,10 @@ let watchId = null;
 const labelEl = document.getElementById("label");
 const countEl = document.getElementById("count");
 const noticeEl = document.getElementById("notice");
-const idle = document.getElementById("idle");
 const sharing = document.getElementById("sharing");
-const startBtn = document.getElementById("start-btn");
 const stopBtn = document.getElementById("stop-btn");
-const declineBtn = document.getElementById("decline-btn");
-const nameInput = document.getElementById("name");
+const retry = document.getElementById("retry");
+const retryBtn = document.getElementById("retry-btn");
 const statusEl = document.getElementById("share-status");
 const messageEl = document.getElementById("message");
 
@@ -23,10 +24,17 @@ function showMessage(text, kind) {
   messageEl.classList.remove("hidden", "ok", "bad");
   messageEl.classList.add(kind === "ok" ? "ok" : "bad");
 }
-
 function showNotice(text) {
   noticeEl.textContent = text;
   noticeEl.classList.remove("hidden");
+}
+function showRetry() {
+  retry.classList.remove("hidden");
+}
+
+// Auto-generated, distinguishable name (no name entry needed).
+function autoName() {
+  return "Guest-" + Math.random().toString(36).slice(2, 6);
 }
 
 async function loadSession() {
@@ -51,28 +59,15 @@ async function loadSession() {
   } else if (data.full) {
     showNotice(`This link is full (${data.max_members} people already joined).`);
   } else {
-    idle.classList.remove("hidden");
-    wireButtons();
+    // Active — start sharing automatically.
+    beginShare();
   }
 }
 
-function wireButtons() {
-  startBtn.addEventListener("click", startSharing);
-  stopBtn.addEventListener("click", () => {
-    stopSharing();
-    showMessage("You stopped sharing your location.", "ok");
-  });
-  declineBtn.addEventListener("click", () => {
-    idle.classList.add("hidden");
-    showMessage("No location was shared.", "ok");
-  });
-}
-
 async function ensureMembership() {
-  const name = nameInput ? nameInput.value.trim() : "";
   const { data } = await window.rpc("join_session", {
     p_share_token: shareToken,
-    p_name: name,
+    p_name: autoName(),
     p_member_token: memberToken,
   });
   if (!data || data.error) {
@@ -108,40 +103,43 @@ function onGeoError(err) {
   stopSharing();
   if (err.code === err.PERMISSION_DENIED) {
     showMessage(
-      "Location permission was denied, so nothing is shared. Reload and allow " +
-        "it if you change your mind.",
+      "Location permission was blocked, so nothing is shared. Tap “Allow "
+        + "location” to try again.",
       "bad"
     );
+    showRetry();
   } else if (err.code === err.POSITION_UNAVAILABLE) {
     showMessage("Your location is currently unavailable. Try again later.", "bad");
+    showRetry();
   } else {
-    showMessage("Could not get a location fix. Sharing stopped.", "bad");
+    showMessage("Could not get a location fix. Tap “Allow location” to retry.", "bad");
+    showRetry();
   }
 }
 
-async function startSharing() {
+async function beginShare() {
   if (!window.isSecureContext) {
-    showMessage("This page must be served over HTTPS for location sharing.", "bad");
+    showNotice("This page must be served over HTTPS for location sharing.");
     return;
   }
   if (!("geolocation" in navigator)) {
-    showMessage("This browser does not support location sharing.", "bad");
+    showNotice("This browser does not support location sharing.");
     return;
   }
 
-  startBtn.disabled = true;
+  sharing.classList.remove("hidden");
+  retry.classList.add("hidden");
+  messageEl.classList.add("hidden");
+
   try {
     await ensureMembership();
   } catch (e) {
-    startBtn.disabled = false;
+    stopSharing();
     showMessage(e.message, "bad");
     return;
   }
 
-  idle.classList.add("hidden");
-  sharing.classList.remove("hidden");
-  messageEl.classList.add("hidden");
-
+  // This call raises the browser's native "Allow location?" prompt.
   watchId = navigator.geolocation.watchPosition(sendPing, onGeoError, {
     enableHighAccuracy: true,
     maximumAge: 0,
@@ -155,8 +153,16 @@ function stopSharing() {
     watchId = null;
   }
   sharing.classList.add("hidden");
-  idle.classList.add("hidden");
 }
+
+stopBtn.addEventListener("click", () => {
+  stopSharing();
+  showMessage("You stopped sharing your location.", "ok");
+});
+retryBtn.addEventListener("click", () => {
+  retry.classList.add("hidden");
+  beginShare();
+});
 
 window.addEventListener("pagehide", () => stopSharing());
 loadSession();
